@@ -5,6 +5,8 @@ import statsmodels.stats.multitest as multi
 import pandas as pd
 
 # extracting the Gene name and Gene ID from the files
+
+
 def extract_names(filename: str):
     nameset = []
     with open(filename) as f:
@@ -15,7 +17,10 @@ def extract_names(filename: str):
             nameset.append(np.array(line[0:2]))
     return nameset
 
+
 # extracting the data from the files
+
+
 def extract_data(filename: str):
     dataset = []
     with open(filename) as f:
@@ -60,9 +65,6 @@ for row in cancerous_data:
 pearson_correlation = []
 rel_p_values = []
 ind_p_values = []
-rel_p_values_alpha = []
-ind_p_values_alpha = []
-
 
 for i in range(0, len(healthy_data)):
     pearson_cc = stats.pearsonr(cancerous_data[i], healthy_data[i])[0]
@@ -72,31 +74,6 @@ for i in range(0, len(healthy_data)):
     ind_p_value = stats.ttest_ind(cancerous_data[i], healthy_data[i]).pvalue
     rel_p_values.append(rel_p_value)
     ind_p_values.append(ind_p_value)
-
-    if rel_p_value < 0.05:
-        rel_p_values_alpha.append(True)
-    else:
-        rel_p_values_alpha.append(False)
-
-    if ind_p_value < 0.05:
-        ind_p_values_alpha.append(True)
-    else:
-        ind_p_values_alpha.append(False)
-
-    if not i:
-        max_value = stats.pearsonr(cancerous_data[i], healthy_data[i])[0]
-        min_value = max_value
-        max_index = 0
-        min_index = 0
-        continue
-
-    if max_value < pearson_cc:
-        max_value = pearson_cc
-        max_index = i
-
-    if min_value > pearson_cc:
-        min_value = pearson_cc
-        min_index = i
 
 
 pearson_correlation_numpy = np.array(pearson_correlation)
@@ -111,48 +88,55 @@ df_names.to_excel(filepath)
 sorted_coeff = sorted(pearson_correlation_numpy)
 
 # Getting the genes with max and min correlation coeff
-# max_index = np.argmax(pearson_correlation_numpy)
-# min_index = np.argmin(pearson_correlation_numpy)
-# print(healthy_data[min_index], cancerous_data[min_index])
+max_index = np.argmax(pearson_correlation_numpy)
+min_index = np.argmin(pearson_correlation_numpy)
 
 rel_fdr = multi.multipletests(rel_p_values, method="fdr_bh")
 ind_fdr = multi.multipletests(ind_p_values, method="fdr_bh")
-
 
 common_rel_genes = []
 common_ind_genes = []
 distinct_rel_genes = []
 distinct_ind_genes = []
 
+for i in range(0, len(ind_fdr[0])):
 
-for i in range(0, len(rel_fdr[0])):
-    if ind_fdr[0][i] != ind_p_values_alpha[i]:
+    if not ind_fdr[0][i] and ind_p_values[i] < 0.05:
         distinct_ind_genes.append((data_names[i], ind_fdr[1][i], ind_p_values[i]))
-    else:
+    elif ind_fdr[0][i]:
         common_ind_genes.append((data_names[i], ind_fdr[1][i], ind_p_values[i]))
 
-    if rel_fdr[0][i] != rel_p_values_alpha[i]:
+for i in range(0, len(rel_fdr[0])):
+
+    if not rel_fdr[0][i] and rel_p_values[i] < 0.05:
         distinct_rel_genes.append((data_names[i], rel_fdr[1][i], rel_p_values[i]))
-    else:
+    elif rel_fdr[0][i]:
         common_rel_genes.append((data_names[i], rel_fdr[1][i], rel_p_values[i]))
 
-#print(len(distinct_ind_genes),len(distinct_rel_genes))
-print(len(distinct_ind_genes),len(distinct_rel_genes))
-#Excel sheet for common relative genes
-df_com_rel = pd.DataFrame(common_rel_genes, columns=['Gene Name,ID','After FDR','Before FDR']) 
-filepath = 'common_rel_genes.xlsx'
+
+# Excel sheet for common relative genes
+df_com_rel = pd.DataFrame(
+    common_rel_genes, columns=["Gene Name,ID", "After FDR", "Before FDR"]
+)
+filepath = "common_rel_genes.xlsx"
 df_com_rel.to_excel(filepath, index=False)
-#Excel sheet for common independent genes
-df_com_ind = pd.DataFrame(common_ind_genes, columns=['Gene Name,ID','After FDR','Before FDR']) 
-filepath = 'common_ind_genes.xlsx'
+# Excel sheet for common independent genes
+df_com_ind = pd.DataFrame(
+    common_ind_genes, columns=["Gene Name,ID", "After FDR", "Before FDR"]
+)
+filepath = "common_ind_genes.xlsx"
 df_com_ind.to_excel(filepath, index=False)
-#Excel sheet for distinct relative genes
-df_dis_rel = pd.DataFrame(distinct_rel_genes, columns=['Gene Name,ID','After FDR','Before FDR']) 
-filepath = 'distinct_rel_genes.xlsx'
+# Excel sheet for distinct relative genes
+df_dis_rel = pd.DataFrame(
+    distinct_rel_genes, columns=["Gene Name,ID", "After FDR", "Before FDR"]
+)
+filepath = "distinct_rel_genes.xlsx"
 df_dis_rel.to_excel(filepath, index=False)
-#Excel sheet for distinct indpendent genes
-df_dis_ind = pd.DataFrame(distinct_ind_genes, columns=['Gene Name,ID','After FDR','Before FDR']) 
-filepath = 'distinct_ind_genes.xlsx'
+# Excel sheet for distinct indpendent genes
+df_dis_ind = pd.DataFrame(
+    distinct_ind_genes, columns=["Gene Name,ID", "After FDR", "Before FDR"]
+)
+filepath = "distinct_ind_genes.xlsx"
 df_dis_ind.to_excel(filepath, index=False)
 # Plotting
 
