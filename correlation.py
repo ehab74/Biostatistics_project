@@ -137,6 +137,23 @@ for i in range(0, len(rel_fdr[0])):
         common_rel_genes.append((data_names[i], rel_fdr[1][i], rel_p_values[i]))
 
 #print(len(distinct_ind_genes),len(distinct_rel_genes))
+print(len(distinct_ind_genes),len(distinct_rel_genes))
+#Excel sheet for common relative genes
+df_com_rel = pd.DataFrame(common_rel_genes, columns=['Gene Name,ID','After FDR','Before FDR']) 
+filepath = 'common_rel_genes.xlsx'
+df_com_rel.to_excel(filepath, index=False)
+#Excel sheet for common independent genes
+df_com_ind = pd.DataFrame(common_ind_genes, columns=['Gene Name,ID','After FDR','Before FDR']) 
+filepath = 'common_ind_genes.xlsx'
+df_com_ind.to_excel(filepath, index=False)
+#Excel sheet for distinct relative genes
+df_dis_rel = pd.DataFrame(distinct_rel_genes, columns=['Gene Name,ID','After FDR','Before FDR']) 
+filepath = 'distinct_rel_genes.xlsx'
+df_dis_rel.to_excel(filepath, index=False)
+#Excel sheet for distinct indpendent genes
+df_dis_ind = pd.DataFrame(distinct_ind_genes, columns=['Gene Name,ID','After FDR','Before FDR']) 
+filepath = 'distinct_ind_genes.xlsx'
+df_dis_ind.to_excel(filepath, index=False)
 # Plotting
 
 fig, (ax1, ax2) = plt.subplots(2)
