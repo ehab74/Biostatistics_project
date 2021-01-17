@@ -15,7 +15,6 @@ def extract_names(filename: str):
             nameset.append(np.array(line[0:2]))
     return nameset
 
-
 # extracting the data from the files
 def extract_data(filename: str):
     dataset = []
@@ -28,81 +27,97 @@ def extract_data(filename: str):
     return dataset
 
 
-data_healthy = extract_data("lusc-rsem-fpkm-tcga_paired.txt")
-data_cancerous = extract_data("lusc-rsem-fpkm-tcga-t_paired.txt")
+healthy_data = extract_data("lusc-rsem-fpkm-tcga_paired.txt")
+cancerous_data = extract_data("lusc-rsem-fpkm-tcga-t_paired.txt")
 data_names = extract_names("lusc-rsem-fpkm-tcga_paired.txt")
+
 # Removing the data that has an expression of 0 in more than 50% of the sample
 iterator = 0
-for row in data_healthy:
+for row in healthy_data:
     sum = 0
     for column in row:
         if column == 0:
             sum += 1
     if sum > 25:
-        data_healthy.pop(iterator)
+        healthy_data.pop(iterator)
         data_names.pop(iterator)
-        data_cancerous.pop(iterator)
+        cancerous_data.pop(iterator)
     iterator += 1
 
 iterator = 0
-for row in data_cancerous:
+for row in cancerous_data:
     sum = 0
     for column in row:
         if column == 0:
             sum += 1
     if sum > 25:
-        data_healthy.pop(iterator)
+        healthy_data.pop(iterator)
         data_names.pop(iterator)
-        data_cancerous.pop(iterator)
+        cancerous_data.pop(iterator)
     iterator += 1
 
-pearson_coeff = []
 # Getting the pearson coeff for each gene
-[
-    pearson_coeff.append(stats.pearsonr(data_cancerous[i], data_healthy[i])[0])
-    for i in range(0, len(data_healthy))
-]
-pearson_coeff_numpy = np.array(pearson_coeff)
+pearson_correlation = []
+rel_p_values = []
+ind_p_values = []
+rel_p_values_alpha = []
+ind_p_values_alpha = []
+
+
+for i in range(0, len(healthy_data)):
+    pearson_cc = stats.pearsonr(cancerous_data[i], healthy_data[i])[0]
+    pearson_correlation.append(pearson_cc)
+
+    rel_p_value = stats.ttest_rel(cancerous_data[i], healthy_data[i]).pvalue
+    ind_p_value = stats.ttest_ind(cancerous_data[i], healthy_data[i]).pvalue
+    rel_p_values.append(rel_p_value)
+    ind_p_values.append(ind_p_value)
+
+    if rel_p_value < 0.05:
+        rel_p_values_alpha.append(True)
+    else:
+        rel_p_values_alpha.append(False)
+
+    if ind_p_value < 0.05:
+        ind_p_values_alpha.append(True)
+    else:
+        ind_p_values_alpha.append(False)
+
+    if not i:
+        max_value = stats.pearsonr(cancerous_data[i], healthy_data[i])[0]
+        min_value = max_value
+        max_index = 0
+        min_index = 0
+        continue
+
+    if max_value < pearson_cc:
+        max_value = pearson_cc
+        max_index = i
+
+    if min_value > pearson_cc:
+        min_value = pearson_cc
+        min_index = i
+
+
+pearson_correlation_numpy = np.array(pearson_correlation)
 # Export the CC to an excel sheet
 df_names = pd.DataFrame(data_names, columns=["Gene name", "Gene ID"])
-df_names["Pearson CC"] = pearson_coeff_numpy
+df_names["Pearson CC"] = pearson_correlation_numpy
 filepath = "Correlations.xlsx"
 df_names.to_excel(filepath)
 
 
 # Sort the realtional coefficient array
-sorted_coeff = sorted(pearson_coeff_numpy)
+sorted_coeff = sorted(pearson_correlation_numpy)
 
 # Getting the genes with max and min correlation coeff
-max_index = np.argmax(pearson_coeff_numpy)
-min_index = np.argmin(pearson_coeff_numpy)
-# print(data_healthy[min_index], data_cancerous[min_index])
-
-rel_p_values = []
-ind_p_values = []
-[
-    rel_p_values.append(stats.ttest_rel(data_cancerous[i], data_healthy[i]).pvalue)
-    for i in range(0, len(data_healthy))
-]
-[
-    ind_p_values.append(stats.ttest_ind(data_cancerous[i], data_healthy[i]).pvalue)
-    for i in range(0, len(data_healthy))
-]
-# print(rel_p_values)
+# max_index = np.argmax(pearson_correlation_numpy)
+# min_index = np.argmin(pearson_correlation_numpy)
+# print(healthy_data[min_index], cancerous_data[min_index])
 
 rel_fdr = multi.multipletests(rel_p_values, method="fdr_bh")
 ind_fdr = multi.multipletests(ind_p_values, method="fdr_bh")
 
-# print(rel_p_values)
-rel_p_values_alpha = []
-ind_p_values_alpha = []
-for x in rel_p_values:
-    if x < 0.05:
-        rel_p_values_alpha.append(True)
-        ind_p_values_alpha.append(True)
-    else:
-        rel_p_values_alpha.append(False)
-        ind_p_values_alpha.append(False)
 
 common_rel_genes = []
 common_ind_genes = []
@@ -121,6 +136,7 @@ for i in range(0, len(rel_fdr[0])):
     else:
         common_rel_genes.append((data_names[i], rel_fdr[1][i], rel_p_values[i]))
 
+#print(len(distinct_ind_genes),len(distinct_rel_genes))
 # Plotting
 
 fig, (ax1, ax2) = plt.subplots(2)
@@ -129,20 +145,20 @@ fig.suptitle(
 )
 ax1.set_title(f"Gene with Maximum Correlation Coefficient{data_names[max_index]}")
 ax2.set_title(f"Gene with Minimum Correlation Coefficient{data_names[min_index]}")
-ax1.scatter(data_healthy[max_index], data_cancerous[max_index])
-ax1.set(xlabel="data_healthy", ylabel="data_cancerous")
+ax1.scatter(healthy_data[max_index], cancerous_data[max_index])
+ax1.set(xlabel="healthy_data", ylabel="cancerous_data")
 ax1.plot(
-    np.unique(data_healthy[max_index]),
-    np.poly1d(np.polyfit(data_healthy[max_index], data_cancerous[max_index], 1))(
-        np.unique(data_healthy[max_index])
+    np.unique(healthy_data[max_index]),
+    np.poly1d(np.polyfit(healthy_data[max_index], cancerous_data[max_index], 1))(
+        np.unique(healthy_data[max_index])
     ),
     color="blue",
 )
-ax2.scatter(data_healthy[min_index], data_cancerous[min_index])
+ax2.scatter(healthy_data[min_index], cancerous_data[min_index])
 ax2.plot(
-    np.unique(data_healthy[min_index]),
-    np.poly1d(np.polyfit(data_healthy[min_index], data_cancerous[min_index], 1))(
-        np.unique(data_healthy[min_index])
+    np.unique(healthy_data[min_index]),
+    np.poly1d(np.polyfit(healthy_data[min_index], cancerous_data[min_index], 1))(
+        np.unique(healthy_data[min_index])
     ),
     color="blue",
 )
