@@ -36,7 +36,7 @@ healthy_data = extract_data("lusc-rsem-fpkm-tcga_paired.txt")
 cancerous_data = extract_data("lusc-rsem-fpkm-tcga-t_paired.txt")
 data_names = extract_names("lusc-rsem-fpkm-tcga_paired.txt")
 
-# Removing the data that has an expression of 0 in more than 50% of the sample
+# Removing the data that has an expression level of 0 in more than 50% of the samples
 iterator = 0
 for row in healthy_data:
     sum = 0
@@ -69,7 +69,7 @@ ind_p_values = []
 for i in range(0, len(healthy_data)):
     pearson_cc = stats.pearsonr(cancerous_data[i], healthy_data[i])[0]
     pearson_correlation.append(pearson_cc)
-
+#Getting the p value for each gene when the samples are paired and independent
     rel_p_value = stats.ttest_rel(cancerous_data[i], healthy_data[i]).pvalue
     ind_p_value = stats.ttest_ind(cancerous_data[i], healthy_data[i]).pvalue
     rel_p_values.append(rel_p_value)
@@ -98,14 +98,14 @@ common_rel_genes = []
 common_ind_genes = []
 distinct_rel_genes = []
 distinct_ind_genes = []
-
+#Get the distinct and common genes that staisfy the hypothesis when the samples are independent
 for i in range(0, len(ind_fdr[0])):
 
     if not ind_fdr[0][i] and ind_p_values[i] < 0.05:
         distinct_ind_genes.append((data_names[i], ind_fdr[1][i], ind_p_values[i]))
     elif ind_fdr[0][i]:
         common_ind_genes.append((data_names[i], ind_fdr[1][i], ind_p_values[i]))
-
+#Get the distinct and common genes that staisfy the hypothesis when the samples are paired
 for i in range(0, len(rel_fdr[0])):
 
     if not rel_fdr[0][i] and rel_p_values[i] < 0.05:
@@ -138,6 +138,7 @@ df_dis_ind = pd.DataFrame(
 )
 filepath = "distinct_ind_genes.xlsx"
 df_dis_ind.to_excel(filepath, index=False)
+
 # Plotting
 
 fig, (ax1, ax2) = plt.subplots(2)
