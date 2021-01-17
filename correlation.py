@@ -163,7 +163,7 @@ fig.suptitle(
 ax1.set_title(f"Gene with Maximum Correlation Coefficient{data_names[max_index]}")
 ax2.set_title(f"Gene with Minimum Correlation Coefficient{data_names[min_index]}")
 ax1.scatter(healthy_data[max_index], cancerous_data[max_index])
-ax1.set(xlabel="healthy_data", ylabel="cancerous_data")
+ax1.set(xlabel="healthy_sample", ylabel="cancerous_sample")
 ax1.plot(
     np.unique(healthy_data[max_index]),
     np.poly1d(np.polyfit(healthy_data[max_index], cancerous_data[max_index], 1))(
@@ -172,6 +172,7 @@ ax1.plot(
     color="blue",
 )
 ax2.scatter(healthy_data[min_index], cancerous_data[min_index])
+ax2.set(xlabel="healthy_sample", ylabel="cancerous_sample")
 ax2.plot(
     np.unique(healthy_data[min_index]),
     np.poly1d(np.polyfit(healthy_data[min_index], cancerous_data[min_index], 1))(

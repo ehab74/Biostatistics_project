@@ -1,0 +1,56 @@
+\documentclass[conference,twocolumn]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{float}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{authblk}
+\usepackage{url} 
+\usepackage{pdfpages}
+\usepackage{tabularx}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\graphicspath{ {figures/} }
+\usepackage{array}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+   T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+ 
+\pagenumbering{roman}
+
+  
+ 
+\begin{document}
+\pagestyle{plain}
+
+\section{\textbf{introduction}}
+\textbf{We} conducted a study to analyze gene expression (GE) data for the cancer type Lung
+Squamous Cell Carcinoma (LUSC). We analyzed the data from the two text files \textbf{“lusc-rsem-fpkm-tcga-t\_paired.txt"} and \textbf{“lusc-rsem-fpkm-tcga\_paired.txt"} to find the correlation coefficient for the gene when the tissue is healthy and when it's cancerous. We also used \textbf{Hypothesis Testing} to test our hypothesis that gene expressions are altered when the cells of the tissue become cancerous.
+\section{\textbf{Methods}}
+We mainly used \textbf{Python} to carry on our calculation and analysis.
+The sequence of our testing was the following:
+\begin{enumerate}
+    \item The data was cleaned by removing any gene which had and expression of 0 in more than 50% of the samples.
+    \item We calculated Pearson's correlational coefficient between the same gene in both the healthy tissue and the cancerous tissue using Python's \textbf{scipy.stats.pearsonr}, and both the genes with the highest positive and the lowest negative correlational coefficient were extracted using Python's \textbf{min} and \textbf{max} functions.
+    \item We exported each gene with its correlational coefficient to an \textit{Excel} spreadsheet using \textbf{Pandas} package in Python.
+    \item A relation was plotted between the gene expressions in both healthy tissue and the cancerous tissue of the above mentioned genes using \textbf{matplotlib.pyplot}
+    \item The hypothesis testing procedure was done using \textbf{scipy.sats.ttest.rel} to test if the samples were paired and \textbf{scipy.sats.ttest.ind} if the samples were independent.
+    \item FDR test correction method was then applied on the resulting p-values on the two previous tests.
+    \item The p-values of both cases before and after applying FDR test were then compared and the genes which values were not affected by FDR were found and we called them common genes. On the other hand, the genes which values got affected by FDR were called distinct genes.
+    \item All of the common independent genes, common relative genes, distinct independent genes and distinct relative genes were exported to 4 different spreadsheets.
+\end{enumerate}
+\section{Results and Discussion}
+\subsection{Correlation}
+After running the code we found that gene that had the highest positive correlational coefficient(CC) was "\textbf{AREGB}" and had a CC. of \textbf{'0.969044144297071'}. While the gene with the highest negative CC was \textbf{FAM222B} with a CC of \textbf{'-0.452807278524708'} fig.1 shows the relationship between gene expressions in both cancerous and healthy tissues in these two genes. A spreadsheet containing each gene and its CC is exported in \textbf{Correlations.xlsx}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{figure_1.png}
+    \caption{Relationship between gene expressions in both cancerous and healthy tissue.}
+    \label{fig:my_label}
+\end{figure}
+\subsection{Hypothesis Testing}
+
+
+\end{document}
